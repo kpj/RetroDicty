@@ -57,7 +57,7 @@ rule star_se:
         fq1 = 'trimmed/{accession}.trimmed.fastq',
         ref = 'reference/'
     output:
-        'alignment/{accession}/Aligned.out.bam'
+        'alignment/{accession}/Aligned.sortedByCoord.out.bam'
     log:
         'logs/star/{accession}.log'
     params:
@@ -69,9 +69,9 @@ rule star_se:
 
 rule samtools_index:
     input:
-        'alignment/{accession}/Aligned.out.bam'
+        'alignment/{accession}/Aligned.sortedByCoord.out.bam'
     output:
-        'alignment/{accession}/Aligned.out.bam.bai'
+        'alignment/{accession}/Aligned.sortedByCoord.out.bam.bai'
     wrapper:
         '0.50.4/bio/samtools/index'
 
@@ -82,10 +82,10 @@ rule aggregate_results:
             'trimmed/{accession}.trimmed.fastq',
             accession=config['samples'].keys()),
         bam_files = expand(
-            'alignment/{accession}/Aligned.out.bam',
+            'alignment/{accession}/Aligned.sortedByCoord.out.bam',
             accession=config['samples'].keys()),
         index_files = expand(
-            'alignment/{accession}/Aligned.out.bam.bai',
+            'alignment/{accession}/Aligned.sortedByCoord.out.bam.bai',
             accession=config['samples'].keys())
     output:
         fname = 'results/counts.csv',
