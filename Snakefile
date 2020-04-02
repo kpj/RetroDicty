@@ -22,7 +22,7 @@ rule cutadapt:
         fastq = 'trimmed/{accession}.trimmed.fastq',
         qc = 'trimmed/{accession}.qc.txt'
     params:
-        lambda wildcards: '-a "A{100}" -q 20'
+        lambda wildcards: '-a "A{100}" -q 20 -m 20'
     log:
         'logs/cutadapt/{accession}.log'
     wrapper:
@@ -41,37 +41,54 @@ rule fastqc:
         '0.50.4/bio/fastqc'
 
 
-rule kallisto_index:
+rule star_index:
     input:
         fasta = srcdir(config['reference'])
     output:
-        index = 'reference/reference.idx'
+        directory('reference/')
     log:
-        'logs/kallisto_index_reference.log'
+        'logs/star_index_reference.log'
     wrapper:
-        '0.50.4/bio/kallisto/index'
+        '0.50.4/bio/star/index'
 
 
-rule kallisto_quant:
+rule star_se:
     input:
-        fastq = 'trimmed/{accession}.trimmed.fastq',
-        index = 'reference/reference.idx'
+        fq1 = 'trimmed/{accession}.trimmed.fastq',
+        ref = 'reference/'
     output:
-        directory('quantification/{accession}')
-    params:
-        extra = '--single -l 200 -s 20'
+        'alignment/{accession}/Aligned.out.bam'
     log:
-        'logs/kallisto_quant_{accession}.log'
+        'logs/star/{accession}.log'
+    params:
+        index = 'reference/',
+        extra = '--outSAMtype BAM SortedByCoordinate'
     wrapper:
-        '0.50.4/bio/kallisto/quant'
+        '0.50.4/bio/star/align'
+
+
+rule samtools_index:
+    input:
+        'alignment/{accession}/Aligned.out.bam'
+    output:
+        'alignment/{accession}/Aligned.out.bam.bai'
+    wrapper:
+        '0.50.4/bio/samtools/index'
 
 
 rule aggregate_results:
     input:
-        quant_dirs = expand(
-            'quantification/{accession}',
+        fastq_files = expand(
+            'trimmed/{accession}.trimmed.fastq',
+            accession=config['samples'].keys()),
+        bam_files = expand(
+            'alignment/{accession}/Aligned.out.bam',
+            accession=config['samples'].keys()),
+        index_files = expand(
+            'alignment/{accession}/Aligned.out.bam.bai',
             accession=config['samples'].keys())
     output:
-        fname = 'results/counts.csv'
+        fname = 'results/counts.csv',
+        plot_dir = directory('plots')
     script:
         'scripts/aggregate.py'
