@@ -49,6 +49,11 @@ def coverage_plot(accession, ref, coverage, mapping_count, fname):
     plt.savefig(fname)
 
 
+def count_fastq_reads(fname):
+    with open(fname) as fd:
+        return int(sum(1 for line in fd) / 4)
+
+
 def read_input_star(fastq_files, bam_files, plot_dir):
     tmp = []
 
@@ -57,7 +62,7 @@ def read_input_star(fastq_files, bam_files, plot_dir):
         assert bam.has_index()
 
         accession = str(fname_bam).split('/')[1]
-        read_number = 3#len(list(SeqIO.parse(fname_fastq, 'fastq')))
+        read_number = count_fastq_reads(fname_fastq)
 
         for ref in bam.references:
             mapping_count = bam.count(contig=ref)
