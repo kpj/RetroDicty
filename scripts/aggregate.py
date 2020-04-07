@@ -36,14 +36,20 @@ def read_input_kallisto(quant_dirs):
     return pd.concat(df_list)
 
 
-def coverage_plot(accession, ref, coverage, mapping_count, fname):
+def coverage_plot(accession, ref, coverage, coverage_rev, mapping_count, fname):
     plt.figure(figsize=(8, 6))
 
-    sns.lineplot(x=np.arange(0, len(coverage)), y=coverage)
+    sns.lineplot(x=np.arange(0, len(coverage)), y=coverage, label='forward')
+    sns.lineplot(x=np.arange(0, len(coverage_rev)), y=-coverage_rev.astype(int), label='reverse')
+
+    plt.fill_between(np.arange(0, len(coverage)), coverage)
+    plt.fill_between(np.arange(0, len(coverage_rev)), -coverage_rev.astype(int))
 
     plt.title(f'{accession} - {ref} (Mapped reads: {mapping_count})')
     plt.xlabel('Position [bp]')
     plt.ylabel('Read coverage')
+
+    plt.legend(loc='best')
 
     plt.tight_layout()
     plt.savefig(fname)
@@ -52,6 +58,15 @@ def coverage_plot(accession, ref, coverage, mapping_count, fname):
 def count_fastq_reads(fname):
     with open(fname) as fd:
         return int(sum(1 for line in fd) / 4)
+
+
+def get_read_callback(reverse=False):
+    def tmp(read):
+        if read.is_unmapped or read.is_secondary or read.is_qcfail or read.is_duplicate:
+            return False
+
+        return read.is_reverse == reverse
+    return tmp
 
 
 def read_input_star(fastq_files, bam_files, plot_dir):
@@ -67,13 +82,22 @@ def read_input_star(fastq_files, bam_files, plot_dir):
         for ref in bam.references:
             mapping_count = bam.count(contig=ref)
 
-            coverage_base = bam.count_coverage(contig=ref)
-            coverage = np.sum(coverage_base, axis=0)
+            coverage = np.sum(
+                bam.count_coverage(
+                    contig=ref,
+                    read_callback=get_read_callback(reverse=False))
+                , axis=0)
+            coverage_rev = np.sum(
+                bam.count_coverage(
+                    contig=ref,
+                    read_callback=get_read_callback(reverse=True))
+                , axis=0)
 
             # coverage plot
             coverage_plot(
                 accession, ref,
-                coverage, mapping_count,
+                coverage, coverage_rev,
+                mapping_count,
                 plot_dir / f'coverage_{accession}_{ref}.pdf')
 
             # store data
