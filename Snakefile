@@ -86,7 +86,8 @@ rule aggregate_results:
             accession=config['samples'].keys()),
         index_files = expand(
             'alignment/{accession}/Aligned.sortedByCoord.out.bam.bai',
-            accession=config['samples'].keys())
+            accession=config['samples'].keys()),
+        fname_ref = srcdir(config['reference'])
     output:
         fname = 'results/counts.csv',
         plot_dir = directory('plots')

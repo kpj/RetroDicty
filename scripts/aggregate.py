@@ -69,9 +69,15 @@ def get_read_callback(reverse=False):
     return tmp
 
 
-def read_input_star(fastq_files, bam_files, plot_dir):
+def read_input_star(fastq_files, bam_files, fname_ref, plot_dir):
     tmp = []
 
+    # parse reference sequences
+    ref_seqs = {}
+    for record in SeqIO.parse(fname_ref, 'fasta'):
+        ref_seqs[record.id] = str(record.seq)
+
+    # parse mapping results
     for fname_fastq, fname_bam in zip(fastq_files, bam_files):
         bam = pysam.AlignmentFile(fname_bam)
         assert bam.has_index()
@@ -100,6 +106,22 @@ def read_input_star(fastq_files, bam_files, plot_dir):
                 mapping_count,
                 plot_dir / f'coverage_{accession}_{ref}.pdf')
 
+            # store coverage data
+            with open(plot_dir / f'coverage_{accession}_{ref}.csv', 'w') as fd:
+                fd.write(
+                    'position,' +
+                    ','.join(str(p) for p in range(len(ref_seqs[ref]))) +
+                    '\n')
+                fd.write('reference,' + ','.join(ref_seqs[ref]) + '\n')
+                fd.write(
+                    'coverage_forward,' +
+                    ','.join(str(c) for c in coverage) +
+                    '\n')
+                fd.write(
+                    'coverage_reverse,' +
+                    ','.join(str(c) for c in coverage_rev) +
+                    '\n')
+
             # store data
             tmp.append({
                 'accession': accession,
@@ -111,10 +133,10 @@ def read_input_star(fastq_files, bam_files, plot_dir):
     return pd.DataFrame(tmp)
 
 
-def main(fastq_files, bam_files, accession_map, fname_out, plot_dir):
+def main(fastq_files, bam_files, fname_ref, accession_map, fname_out, plot_dir):
     # read quantification results
     plot_dir.mkdir(exist_ok=True)
-    df = read_input_star(fastq_files, bam_files, plot_dir)
+    df = read_input_star(fastq_files, bam_files, fname_ref, plot_dir)
 
     # add additional information
     df['name'] = df['accession'].map(accession_map)
@@ -140,5 +162,6 @@ def main(fastq_files, bam_files, accession_map, fname_out, plot_dir):
 if __name__ == '__main__':
     main(
         snakemake.input.fastq_files, snakemake.input.bam_files,
+        snakemake.input.fname_ref,
         snakemake.config['samples'],
         snakemake.output.fname, Path(snakemake.output.plot_dir))
