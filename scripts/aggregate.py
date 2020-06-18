@@ -14,6 +14,12 @@ from Bio import SeqIO
 sns.set_context('talk')
 
 
+COVERAGEPLOT_YLIMITS = {
+    'DIRS-1': (-30_000, 20_000),
+    'Skipper-1_PLASMID': (-2_500, 1_000)
+}
+
+
 def read_input_kallisto(quant_dirs):
     df_list = []
 
@@ -50,6 +56,9 @@ def coverage_plot(accession, ref, coverage, coverage_rev, mapping_count, fname):
     plt.ylabel('Read coverage')
 
     plt.legend(loc='best')
+
+    if ref in COVERAGEPLOT_YLIMITS:
+        plt.ylim(COVERAGEPLOT_YLIMITS[ref][0], COVERAGEPLOT_YLIMITS[ref][1])
 
     plt.tight_layout()
     plt.savefig(fname)
