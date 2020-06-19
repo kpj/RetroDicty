@@ -15,8 +15,8 @@ sns.set_context('talk')
 
 
 COVERAGEPLOT_YLIMITS = {
-    'DIRS-1': (-30_000, 20_000),
-    'Skipper-1_PLASMID': (-2_500, 1_000)
+    'DIRS-1': (-35_000, 20_000),
+    'Skipper-1_PLASMID': (-4_500, 2_000)
 }
 
 
