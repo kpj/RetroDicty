@@ -22,7 +22,8 @@ rule cutadapt:
         fastq = 'trimmed/{accession}.trimmed.fastq',
         qc = 'trimmed/{accession}.qc.txt'
     params:
-        lambda wildcards: '-a "A{100}" -q 20 -m 20 -M 22'
+        adapters = '-a "A{100}"',
+        extra = '-q 20 -m 20 -M 22'
     log:
         'logs/cutadapt/{accession}.log'
     wrapper:
