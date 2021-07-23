@@ -1,8 +1,8 @@
 workdir: 'pipeline_run'
 
 samples:
-    SRX498138: AGNA_KO
-    SRX498139: AX_2_WT
-    SRX498140: RRPC_KO
+    SRR1201278: AGNA_KO
+    SRR1201279: AX_2_WT
+    SRR1201280: RRPC_KO
 
 reference: 'reference.fa'
