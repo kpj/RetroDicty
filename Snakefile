@@ -64,7 +64,7 @@ rule star_se:
         'logs/star/{accession}.log'
     params:
         index = 'reference/',
-        extra = '--outSAMtype BAM SortedByCoordinate --genomeSAindexNbases 1'
+        extra = '--outSAMtype BAM SortedByCoordinate --genomeSAindexNbases 1 --limitBAMsortRAM 1002064474'
     wrapper:
         '0.77.0/bio/star/align'
 
