@@ -48,6 +48,8 @@ rule star_index:
         directory('reference/')
     log:
         'logs/star_index_reference.log'
+    params:
+        extra = '--genomeSAindexNbases 1'
     wrapper:
         '0.50.4/bio/star/index'
 
@@ -62,7 +64,7 @@ rule star_se:
         'logs/star/{accession}.log'
     params:
         index = 'reference/',
-        extra = '--outSAMtype BAM SortedByCoordinate'
+        extra = '--outSAMtype BAM SortedByCoordinate --genomeSAindexNbases 1'
     wrapper:
         '0.50.4/bio/star/align'
 
