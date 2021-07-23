@@ -12,7 +12,7 @@ rule get_fastq_se:
     output:
         'data/{accession}.fastq'
     wrapper:
-        '0.50.4/bio/sra-tools/fasterq-dump'
+        '0.77.0/bio/sra-tools/fasterq-dump'
 
 
 rule cutadapt:
@@ -26,7 +26,7 @@ rule cutadapt:
     log:
         'logs/cutadapt/{accession}.log'
     wrapper:
-        '0.50.4/bio/cutadapt/se'
+        '0.77.0/bio/cutadapt/se'
 
 
 rule fastqc:
@@ -38,7 +38,7 @@ rule fastqc:
     log:
         'logs/fastqc/{accession}.log'
     wrapper:
-        '0.50.4/bio/fastqc'
+        '0.77.0/bio/fastqc'
 
 
 rule star_index:
@@ -51,7 +51,7 @@ rule star_index:
     params:
         extra = '--genomeSAindexNbases 1'
     wrapper:
-        '0.50.4/bio/star/index'
+        '0.77.0/bio/star/index'
 
 
 rule star_se:
@@ -66,7 +66,7 @@ rule star_se:
         index = 'reference/',
         extra = '--outSAMtype BAM SortedByCoordinate --genomeSAindexNbases 1'
     wrapper:
-        '0.50.4/bio/star/align'
+        '0.77.0/bio/star/align'
 
 
 rule samtools_index:
@@ -75,7 +75,7 @@ rule samtools_index:
     output:
         'alignment/{accession}/Aligned.sortedByCoord.out.bam.bai'
     wrapper:
-        '0.50.4/bio/samtools/index'
+        '0.77.0/bio/samtools/index'
 
 
 rule aggregate_results:
