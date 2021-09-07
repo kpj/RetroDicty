@@ -1,26 +1,25 @@
-configfile: 'config.yaml'
-workdir: config['workdir']
+configfile: 'config/config.yaml'
 
 
 rule all:
     input:
         'results/counts.csv',
-        expand('qc/{accession}.html', accession=config['samples'].keys())
+        expand('results/qc/{accession}.html', accession=config['samples'].keys())
 
 
 rule get_fastq_se:
     output:
-        'data/{accession}.fastq'
+        'results/data/{accession}.fastq'
     wrapper:
         '0.77.0/bio/sra-tools/fasterq-dump'
 
 
 rule cutadapt:
     input:
-        'data/{accession}.fastq'
+        'results/data/{accession}.fastq'
     output:
-        fastq = 'trimmed/{accession}.trimmed.fastq',
-        qc = 'trimmed/{accession}.qc.txt'
+        fastq = 'results/trimmed/{accession}.trimmed.fastq',
+        qc = 'results/trimmed/{accession}.qc.txt'
     params:
         adapters = lambda wildcards: '-a "A{100}"',
         extra = '-q 20 -m 20 -M 22'
@@ -32,10 +31,10 @@ rule cutadapt:
 
 rule fastqc:
     input:
-        'trimmed/{accession}.trimmed.fastq'
+        'results/trimmed/{accession}.trimmed.fastq'
     output:
-        html = 'qc/{accession}.html',
-        zip = 'qc/{accession}_fastqc.zip'
+        html = 'results/qc/{accession}.html',
+        zip = 'results/qc/{accession}_fastqc.zip'
     log:
         'logs/fastqc/{accession}.log'
     wrapper:
@@ -44,9 +43,9 @@ rule fastqc:
 
 rule star_index:
     input:
-        fasta = srcdir(config['reference'])
+        fasta = config['reference']
     output:
-        directory('reference/')
+        directory('results/reference/')
     log:
         'logs/star_index_reference.log'
     params:
@@ -57,10 +56,10 @@ rule star_index:
 
 rule star_se:
     input:
-        fq1 = 'trimmed/{accession}.trimmed.fastq',
-        ref = 'reference/'
+        fq1 = 'results/trimmed/{accession}.trimmed.fastq',
+        ref = 'results/reference/'
     output:
-        'alignment/{accession}/Aligned.sortedByCoord.out.bam'
+        'results/alignment/{accession}/Aligned.sortedByCoord.out.bam'
     log:
         'logs/star/{accession}.log'
     params:
@@ -72,9 +71,9 @@ rule star_se:
 
 rule samtools_index:
     input:
-        'alignment/{accession}/Aligned.sortedByCoord.out.bam'
+        'results/alignment/{accession}/Aligned.sortedByCoord.out.bam'
     output:
-        'alignment/{accession}/Aligned.sortedByCoord.out.bam.bai'
+        'results/alignment/{accession}/Aligned.sortedByCoord.out.bam.bai'
     wrapper:
         '0.77.0/bio/samtools/index'
 
@@ -82,17 +81,17 @@ rule samtools_index:
 rule aggregate_results:
     input:
         fastq_files = expand(
-            'trimmed/{accession}.trimmed.fastq',
+            'results/trimmed/{accession}.trimmed.fastq',
             accession=config['samples'].keys()),
         bam_files = expand(
-            'alignment/{accession}/Aligned.sortedByCoord.out.bam',
+            'results/alignment/{accession}/Aligned.sortedByCoord.out.bam',
             accession=config['samples'].keys()),
         index_files = expand(
-            'alignment/{accession}/Aligned.sortedByCoord.out.bam.bai',
+            'results/alignment/{accession}/Aligned.sortedByCoord.out.bam.bai',
             accession=config['samples'].keys()),
-        fname_ref = srcdir(config['reference'])
+        fname_ref = config['reference']
     output:
         fname = 'results/counts.csv',
-        plot_dir = directory('plots')
+        plot_dir = directory('results/plots')
     script:
         'scripts/aggregate.py'

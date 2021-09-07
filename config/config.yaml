@@ -1,8 +1,6 @@
-workdir: 'pipeline_run'
-
 samples:
     SRR1201278: AGNA_KO
     SRR1201279: AX_2_WT
     SRR1201280: RRPC_KO
 
-reference: 'reference.fa'
+reference: 'resources/reference.fa'
