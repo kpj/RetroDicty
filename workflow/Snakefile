@@ -1,97 +1,100 @@
-configfile: 'config/config.yaml'
+configfile: "config/config.yaml"
 
 
 rule all:
     input:
-        'results/counts.csv',
-        expand('results/qc/{accession}.html', accession=config['samples'].keys())
+        "results/counts.csv",
+        expand("results/qc/{accession}.html", accession=config["samples"].keys()),
 
 
 rule get_fastq_se:
     output:
-        'results/data/{accession}.fastq'
+        "results/data/{accession}.fastq",
     wrapper:
-        '0.77.0/bio/sra-tools/fasterq-dump'
+        "0.77.0/bio/sra-tools/fasterq-dump"
 
 
 rule cutadapt:
     input:
-        'results/data/{accession}.fastq'
+        "results/data/{accession}.fastq",
     output:
-        fastq = 'results/trimmed/{accession}.trimmed.fastq',
-        qc = 'results/trimmed/{accession}.qc.txt'
+        fastq="results/trimmed/{accession}.trimmed.fastq",
+        qc="results/trimmed/{accession}.qc.txt",
     params:
-        adapters = lambda wildcards: '-a "A{100}"',
-        extra = '-q 20 -m 20 -M 22'
+        adapters=lambda wildcards: '-a "A{100}"',
+        extra="-q 20 -m 20 -M 22",
     log:
-        'logs/cutadapt/{accession}.log'
+        "logs/cutadapt/{accession}.log",
     wrapper:
-        '0.77.0/bio/cutadapt/se'
+        "0.77.0/bio/cutadapt/se"
 
 
 rule fastqc:
     input:
-        'results/trimmed/{accession}.trimmed.fastq'
+        "results/trimmed/{accession}.trimmed.fastq",
     output:
-        html = 'results/qc/{accession}.html',
-        zip = 'results/qc/{accession}_fastqc.zip'
+        html="results/qc/{accession}.html",
+        zip="results/qc/{accession}_fastqc.zip",
     log:
-        'logs/fastqc/{accession}.log'
+        "logs/fastqc/{accession}.log",
     wrapper:
-        '0.77.0/bio/fastqc'
+        "0.77.0/bio/fastqc"
 
 
 rule star_index:
     input:
-        fasta = config['reference']
+        fasta=config["reference"],
     output:
-        directory('results/reference/')
+        directory("results/reference/"),
     log:
-        'logs/star_index_reference.log'
+        "logs/star_index_reference.log",
     params:
-        extra = '--genomeSAindexNbases 1'
+        extra="--genomeSAindexNbases 1",
     wrapper:
-        '0.77.0/bio/star/index'
+        "0.77.0/bio/star/index"
 
 
 rule star_se:
     input:
-        fq1 = 'results/trimmed/{accession}.trimmed.fastq',
-        ref = 'results/reference/'
+        fq1="results/trimmed/{accession}.trimmed.fastq",
+        ref="results/reference/",
     output:
-        'results/alignment/{accession}/Aligned.sortedByCoord.out.bam'
+        "results/alignment/{accession}/Aligned.sortedByCoord.out.bam",
     log:
-        'logs/star/{accession}.log'
+        "logs/star/{accession}.log",
     params:
-        index = 'reference/',
-        extra = '--outSAMtype BAM SortedByCoordinate --genomeSAindexNbases 1 --limitBAMsortRAM 1002064474'
+        index="reference/",
+        extra="--outSAMtype BAM SortedByCoordinate --genomeSAindexNbases 1 --limitBAMsortRAM 1002064474",
     wrapper:
-        '0.77.0/bio/star/align'
+        "0.77.0/bio/star/align"
 
 
 rule samtools_index:
     input:
-        'results/alignment/{accession}/Aligned.sortedByCoord.out.bam'
+        "results/alignment/{accession}/Aligned.sortedByCoord.out.bam",
     output:
-        'results/alignment/{accession}/Aligned.sortedByCoord.out.bam.bai'
+        "results/alignment/{accession}/Aligned.sortedByCoord.out.bam.bai",
     wrapper:
-        '0.77.0/bio/samtools/index'
+        "0.77.0/bio/samtools/index"
 
 
 rule aggregate_results:
     input:
-        fastq_files = expand(
-            'results/trimmed/{accession}.trimmed.fastq',
-            accession=config['samples'].keys()),
-        bam_files = expand(
-            'results/alignment/{accession}/Aligned.sortedByCoord.out.bam',
-            accession=config['samples'].keys()),
-        index_files = expand(
-            'results/alignment/{accession}/Aligned.sortedByCoord.out.bam.bai',
-            accession=config['samples'].keys()),
-        fname_ref = config['reference']
+        fastq_files=expand(
+            "results/trimmed/{accession}.trimmed.fastq",
+            accession=config["samples"].keys(),
+        ),
+        bam_files=expand(
+            "results/alignment/{accession}/Aligned.sortedByCoord.out.bam",
+            accession=config["samples"].keys(),
+        ),
+        index_files=expand(
+            "results/alignment/{accession}/Aligned.sortedByCoord.out.bam.bai",
+            accession=config["samples"].keys(),
+        ),
+        fname_ref=config["reference"],
     output:
-        fname = 'results/counts.csv',
-        plot_dir = directory('results/plots')
+        fname="results/counts.csv",
+        plot_dir=directory("results/plots"),
     script:
-        'scripts/aggregate.py'
+        "scripts/aggregate.py"
